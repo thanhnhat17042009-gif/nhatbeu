@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus — Personal Dashboard</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#0d1117;color:#eef2f7;min-height:100vh;transition:.3s}
+  body.light{background:#f4f6f8;color:#18202a}
+  .wrap{max-width:1050px;margin:auto;padding:28px 20px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  .logo{font-size:22px;font-weight:800;letter-spacing:.5px}
+  .logo span{opacity:.45}
+  button{border:0;border-radius:12px;padding:10px 14px;cursor:pointer;background:#1d2632;color:inherit}
+  .light button{background:#fff;box-shadow:0 4px 16px #00000012}
+  .hero{padding:34px;border-radius:24px;background:linear-gradient(135deg,#17212d,#11161e);border:1px solid #263241}
+  .light .hero{background:linear-gradient(135deg,#ffffff,#eaf0f5);border-color:#dde4eb}
+  .eyebrow{font-size:13px;opacity:.6;text-transform:uppercase;letter-spacing:2px}
+  h1{font-size:clamp(34px,6vw,64px);line-height:1;margin:12px 0}
+  .hero p{opacity:.65;margin-bottom:26px}
+  .clock{font-size:48px;font-weight:700;letter-spacing:2px}
+  .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-top:18px}
+  .card{background:#151c25;border:1px solid #263241;border-radius:20px;padding:22px}
+  .light .card{background:#fff;border-color:#e0e6ec;box-shadow:0 8px 25px #00000008}
+  .card h2{font-size:17px;margin:0 0 18px}
+  .task{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #ffffff0d}
+  .task:last-child{border:0}
+  .task input{width:18px;height:18px;accent-color:#7dd3fc}
+  .task.done span{text-decoration:line-through;opacity:.4}
+  .progress{height:9px;background:#27313d;border-radius:99px;overflow:hidden}
+  .bar{height:100%;width:62%;background:#7dd3fc;border-radius:99px;transition:.3s}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{padding:16px;border-radius:15px;background:#1b2430}
+  .light .stat{background:#f1f4f7}
+  .num{font-size:28px;font-weight:750}.label{font-size:12px;opacity:.55}
+  .timer{text-align:center}.timer .big{font-size:58px;font-weight:700;margin:12px 0}
+  .timer button{margin:4px}
+  footer{text-align:center;opacity:.4;font-size:12px;margin:24px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}.hero{padding:25px}.clock{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">FOCUS<span>/today</span></div>
+  <button id="theme">☼ Đổi giao diện</button>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">Personal dashboard</div>
+  <h1>Make today count.</h1>
+  <p>Tập trung vào một việc quan trọng nhất trước.</p>
+  <div class="clock" id="clock">00:00:00</div>
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>✓ Việc hôm nay</h2>
+    <label class="task"><input type="checkbox"><span>Hoàn thành việc quan trọng nhất</span></label>
+    <label class="task"><input type="checkbox"><span>Học / làm việc tập trung</span></label>
+    <label class="task"><input type="checkbox"><span>Vận động 30 phút</span></label>
+    <label class="task"><input type="checkbox"><span>Thư giãn và chuẩn bị cho ngày mai</span></label>
+    <div style="margin-top:20px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.6;margin-bottom:8px">
+        <span>Tiến độ</span><span id="pct">0%</span>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+  </section>
+
+  <section class="card timer">
+    <h2>⏱ Focus timer</h2>
+    <div class="big" id="timer">25:00</div>
+    <button id="start">Bắt đầu</button>
+    <button id="reset">Đặt lại</button>
+    <div class="stats" style="margin-top:18px">
+      <div class="stat"><div class="num" id="sessions">0</div><div class="label">Phiên tập trung</div></div>
+      <div class="stat"><div class="num" id="completed">0</div><div class="label">Việc hoàn thành</div></div>
+    </div>
+  </section>
+</div>
+
+<footer>Focus — một góc nhỏ để tập trung hơn.</footer>
+</div>
+
+<script>
+const clock=document.getElementById('clock');
+function updateClock(){clock.textContent=new Date().toLocaleTimeString('vi-VN',{hour12:false})}
+setInterval(updateClock,1000); updateClock();
+
+document.getElementById('theme').onclick=()=>document.body.classList.toggle('light');
+
+const checks=[...document.querySelectorAll('.task input')], bar=document.getElementById('bar'), pct=document.getElementById('pct'), completed=document.getElementById('completed');
+function updateTasks(){
+  const n=checks.filter(x=>x.checked).length, p=Math.round(n/checks.length*100);
+  bar.style.width=p+'%'; pct.textContent=p+'%'; completed.textContent=n;
+  checks.forEach(x=>x.parentElement.classList.toggle('done',x.checked));
+}
+checks.forEach(x=>x.addEventListener('change',updateTasks));
+
+let seconds=1500, running=false, interval;
+const timer=document.getElementById('timer'), start=document.getElementById('start'), sessions=document.getElementById('sessions');
+function draw(){timer.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
+start.onclick=()=>{
+  if(running){running=false;clearInterval(interval);start.textContent='Tiếp tục'}
+  else{running=true;start.textContent='Tạm dừng';interval=setInterval(()=>{if(seconds>0){seconds--;draw()}else{clearInterval(interval);running=false;sessions.textContent=+sessions.textContent+1;start.textContent='Bắt đầu';seconds=1500;draw()}},1000)}
+}
+document.getElementById('reset').onclick=()=>{clearInterval(interval);running=false;seconds=1500;draw();start.textContent='Bắt đầu'}
+draw();
+</script>
+</body>
+</html>
